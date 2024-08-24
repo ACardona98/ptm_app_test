@@ -1,0 +1,41 @@
+# Archivos y directorios específicos de PHP
+vendor/
+composer.lock
+
+# Configuración del entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos de caché y logs
+*.log
+*.cache
+*.tmp
+*.swp
+
+# Directorios de caché de PHP
+cache/
+tmp/
+logs/
+
+# Archivos y directorios relacionados con IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos relacionados con el sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos generados por el servidor web
+public/storage/
+storage/*.key
+
+# Archivos de PHPUnit
+phpunit.xml
+phpunit.xml.dist
+
+# Archivos de implementación específicos del servidor
+.deploy/
+.deploy.php
