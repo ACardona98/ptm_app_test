@@ -18,6 +18,7 @@ function loadProductos() {
             const tbody = document.querySelector("#productosTable tbody");
             tbody.innerHTML = "";
 
+            //Recorrer los productos para ser mostrados en la tabla de productos
             productos.forEach(producto => {
                 const row = document.createElement("tr");
 
@@ -60,26 +61,31 @@ function getCombinations() {
     fetch(`../index.php?action=getCombinations&number=${numberToCompare}`)
         .then(response => response.json())
         .then(data => {
-            
-            const combinations = data.data;
+            if(data.status == 200){
+                const combinations = data.data;
 
-            const tbody = document.querySelector("#combinacionesTable tbody");
-            tbody.innerHTML = "";
-            let c = 1;
-            combinations.forEach(combination => {
-                const row = document.createElement("tr");
+                const tbody = document.querySelector("#combinacionesTable tbody");
+                tbody.innerHTML = "";
+                let c = 1;
 
-                row.innerHTML = `
-                    <td>${c++}</td>
-                    <td>${combination.productos}</td>
-                    <td>${combination.valor}</td>
-                `;
+                //Recorrer las combinaciones para ser mostradas en la tabla de combinaciones
+                combinations.forEach(combination => {
+                    const row = document.createElement("tr");
 
-                tbody.appendChild(row);
-            });
+                    row.innerHTML = `
+                        <td>${c++}</td>
+                        <td>${combination.productos}</td>
+                        <td>${combination.valor}</td>
+                    `;
+
+                    tbody.appendChild(row);
+                });
+            } else {
+                alert(data.data);
+            }
         })
         .catch(error => {
-            console.error('Error cargando total:', error);
+            console.error('Error cargando combinaciones:', error);
         });
 }
 
@@ -87,6 +93,7 @@ function saveProducto() {
     const form = document.getElementById("productoForm");
     const formData = new FormData(form);
 
+    //Validar si el método debe ser POST o PUT dependiendo si tiene o no ID el producto
     const id = formData.get("id");
     const method = id ? "PUT" : "POST";
 
@@ -114,8 +121,8 @@ function editProducto(id) {
     fetch(`../index.php?action=get&id=${id}`)
         .then(response => response.json())
         .then(data => {
+            //Agregar en los inputs los valores retornados del producto
             const producto = JSON.parse(data.data);
-            console.log(producto);
             document.getElementById("id").value = producto.id;
             document.getElementById("nombre").value = producto.nombre;
             document.getElementById("descripcion").value = producto.descripcion;
@@ -163,6 +170,7 @@ function resetForm() {
 }
 
 function getCatData(){
+    //Consultar API de datos de gatos
     fetch('https://meowfacts.herokuapp.com/?count=2&lang=esp')
         .then(response => response.json())
         .then(data => {
@@ -171,9 +179,9 @@ function getCatData(){
                     <li>${currentValue}</li> `,
                 "",
             );
-
+            //agregar el dato en el modal
             document.getElementById("catData").innerHTML = catData;
-            
+            //mostrar modal
             showModal();
         })
         .catch(error => {
@@ -182,15 +190,13 @@ function getCatData(){
 }
 
 function getUselessFacts(){
+    //Consultar API de uselessfacts
     fetch('https://uselessfacts.jsph.pl/api/v2/facts/today')
         .then(response => response.json())
         .then(data => {
-            console.log(data);
+            //agregar en el footer el dato inútil
             let uselessFact = data.text;
-
             document.getElementById("uselessFacts").innerHTML = uselessFact;
-            
-            showModal();
         })
         .catch(error => {
             console.error('Error cargando datos inútiles:', error);

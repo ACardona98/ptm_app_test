@@ -110,74 +110,89 @@ class ProductoController {
             $rows = $this->productoDAO->getAll();
             $productos = $this->getProductsFromRows($rows);
 
-            $all_combinations = [];
-            $combinations_ordered = [];
+            //Si hay al menos 2 productos
+            if(count($productos) >= 2) {
 
-            for($i = 0; $i < count($productos); $i++){
-                $producto1 = $productos[$i];
-                for($j = $i + 1; $j < count($productos); $j++){
-                    $producto2 = $productos[$j];
-                    $key = $producto1->getId() . '-' . $producto2->getId();
-                    if(!array_key_exists($key, $all_combinations)){ // Se valida que no exista en el array de combinaciones
-                        $value = $producto1->getPrecio() + $producto2->getPrecio();
-                        if($value <= $number) { //Se valida que la suma de precios sea menor al número ingresado
-                            $all_combinations[$key] = $value;
-                        }
-                    }
-                    
-                }
-            }
+                $all_combinations = [];
+                $combinations_ordered = [];
 
-            for($i = 0; $i < count($productos); $i++){
-                $producto1 = $productos[$i];
-                for($j = $i + 1; $j < count($productos); $j++){
-                    $producto2 = $productos[$j];
-                    for($k = $j + 1; $k < count($productos); $k++){
-                        $producto3 = $productos[$k];
-                        $key = $producto1->getId() . '-' . $producto2->getId() . '-' . $producto3->getId();
+                //Realizar las combinaciones que cumplan la condición con 2 productos
+                for($i = 0; $i < count($productos); $i++){
+                    $producto1 = $productos[$i];
+                    for($j = $i + 1; $j < count($productos); $j++){
+                        $producto2 = $productos[$j];
+                        $key = $producto1->getId() . '-' . $producto2->getId();
                         if(!array_key_exists($key, $all_combinations)){ // Se valida que no exista en el array de combinaciones
-                            $value = $producto1->getPrecio() + $producto2->getPrecio() + $producto3->getPrecio();
+                            $value = $producto1->getPrecio() + $producto2->getPrecio();
                             if($value <= $number) { //Se valida que la suma de precios sea menor al número ingresado
                                 $all_combinations[$key] = $value;
                             }
                         }
+                        
                     }
-                    
                 }
-            }
 
-            arsort($all_combinations);
+                //Realizar las combinaciones que cumplan la condición con 3 productos
+                for($i = 0; $i < count($productos); $i++){
+                    $producto1 = $productos[$i];
+                    for($j = $i + 1; $j < count($productos); $j++){
+                        $producto2 = $productos[$j];
+                        for($k = $j + 1; $k < count($productos); $k++){
+                            $producto3 = $productos[$k];
+                            $key = $producto1->getId() . '-' . $producto2->getId() . '-' . $producto3->getId();
+                            if(!array_key_exists($key, $all_combinations)){ // Se valida que no exista en el array de combinaciones
+                                $value = $producto1->getPrecio() + $producto2->getPrecio() + $producto3->getPrecio();
+                                if($value <= $number) { //Se valida que la suma de precios sea menor al número ingresado
+                                    $all_combinations[$key] = $value;
+                                }
+                            }
+                        }
+                        
+                    }
+                }
+                //Si existe al menos una combinación
+                if(!empty($all_combinations)){
 
-            $combinations_ordered = array_slice($all_combinations, 0, 5);
-            
-            $combinations = [];
+                    //Ordenar combinaciones de mayor a menor
+                    arsort($all_combinations);
 
-            
-            foreach($combinations_ordered as $key => $value) {
-                $ids = explode("-", $key);
-
-                //obtener los nombres de los productos productos por los ID
-                $nombres = array_map(function($id) use($productos){
+                    //Obtener los primeros 5 elementos del array
+                    $combinations_ordered = array_slice($all_combinations, 0, 5);
                     
-                    //Buscar el producto en el array productos
-                    $productos_filtered = array_filter($productos, function($pro) use($id) {
-                        return $pro->getId() == $id;
-                    });
+                    $combinations = [];
 
-                    $producto = current($productos_filtered);
-                    return $producto->getNombre();
-                }, $ids);
+                    //Recorrer las combinaciones para consultar el nombre de cada producto
+                    foreach($combinations_ordered as $key => $value) {
+                        $ids = explode("-", $key);
 
-                array_push($combinations, ['productos' => implode(', ', $nombres), 'valor' => $value]);
+                        //obtener los nombres de los productos productos por los ID
+                        $nombres = array_map(function($id) use($productos){
+                            
+                            //Buscar el producto en el array productos
+                            $productos_filtered = array_filter($productos, function($pro) use($id) {
+                                return $pro->getId() == $id;
+                            });
+
+                            $producto = current($productos_filtered);
+                            return $producto->getNombre();
+                        }, $ids);
+
+                        array_push($combinations, ['productos' => implode(', ', $nombres), 'valor' => $value]);
+                    }
+                    $this->sendResponse(200, $combinations);
+                } else {
+                    $this->sendResponse(400, "No hay ninguna combinación de 2 o 3 productos en que la suma de sus precios sea menor o igual al valor ingresado");
+                }
+            } else {
+                $this->sendResponse(400, "Deben haber mínimo 2 productos para obtener combinaciones");
             }
-
-            $this->sendResponse(200, $combinations);
         } else {
             $this->sendResponse(400, "Valor ingresado no es numérico");
         }
     }
 
     private function getProductsFromRows($rows) {
+        // Convertir rows a objetos de Producto
         $productos = [];
         foreach($rows as $row) {
             $producto = new Producto(
